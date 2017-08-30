@@ -34,34 +34,34 @@ public class Spell {
 	private int SLA_Level;
 	private String[] domain;
 	private String short_description;
-	private boolean	acid = false;
-	private boolean	air = false;
-	private boolean	chaotic = false;
-	private boolean	cold = false;
-	private boolean	curse = false;
-	private boolean	darkness = false;
-	private boolean	death = false;
-	private boolean	disease = false;
-	private boolean	earth = false;
-	private boolean	electricity = false;
-	private boolean	emotion = false;
-	private boolean	evil = false;
-	private boolean	fear = false;
-	private boolean	fire = false;
-	private boolean	force = false;
-	private boolean	good = false;
-	private boolean	language_dependent = false;
-	private boolean	lawful = false;
-	private boolean	light = false;
-	private boolean	mind_affecting = false;
-	private boolean	pain = false;
-	private boolean	poison = false;
-	private boolean	shadow = false;
-	private boolean	sonic = false;
-	private boolean	water = false;
+	private boolean	acid;
+	private boolean	air;
+	private boolean	chaotic;
+	private boolean	cold;
+	private boolean	curse;
+	private boolean	darkness;
+	private boolean	death;
+	private boolean	disease;
+	private boolean	earth;
+	private boolean	electricity;
+	private boolean	emotion;
+	private boolean	evil;
+	private boolean	fear;
+	private boolean	fire;
+	private boolean	force;
+	private boolean	good;
+	private boolean	language_dependent;
+	private boolean	lawful;
+	private boolean	light;
+	private boolean	mind_affecting;
+	private boolean	pain;
+	private boolean	poison;
+	private boolean	shadow;
+	private boolean	sonic;
+	private boolean	water;
 	private String linktext;
 	private int id;
-	private String material_costs;
+	private int material_costs;
 	private String[] bloodline;
 	private String[] patron;
 	private String mythic_text;	
@@ -69,9 +69,9 @@ public class Spell {
 	private boolean mythic;
 	//bloodrager	shaman	psychic	medium	mesmerist	occultist	spiritualist	skald	investigator	hunter goes with SpellLevel
 	private String	haunt_statistics;
-	private boolean ruse = false;
-	private boolean draconic = false;
-	private boolean meditative = false;
+	private boolean ruse;
+	private boolean draconic;
+	private boolean meditative;
 	public String getName() {
 		return name;
 	}
@@ -402,10 +402,10 @@ public class Spell {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public String getMaterial_costs() {
+	public int getMaterial_costs() {
 		return material_costs;
 	}
-	public void setMaterial_costs(String material_costs) {
+	public void setMaterial_costs(int material_costs) {
 		this.material_costs = material_costs;
 	}
 	public String[] getBloodline() {
