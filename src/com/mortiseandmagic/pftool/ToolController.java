@@ -16,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.mortiseandmagic.pftool.model.CharacterClass;
+import com.mortiseandmagic.pftool.model.ClassHolder;
 import com.mortiseandmagic.pftool.model.Spell;
 import com.mortiseandmagic.pftool.model.SpellLevel;
 
@@ -32,6 +34,21 @@ public class ToolController {
 			loadSpells();
 		}
 		return new ResponseEntity<List<Spell>>(spells, HttpStatus.OK);
+	}
+	
+	@RequestMapping(value = "/GetClasses",
+		produces = { MediaType.APPLICATION_JSON_VALUE }, 
+		method = RequestMethod.GET)
+	public ResponseEntity<List<ClassHolder>> getClasses() {
+		List<ClassHolder> classes = new ArrayList<ClassHolder>();
+		for(CharacterClass c : CharacterClass.values()) {
+			ClassHolder ch = new ClassHolder();
+			ch.setDisplayName(c.getDisplayName());
+			ch.setShortName(c.getShortName());
+			classes.add(ch);
+		}
+		return new ResponseEntity<List<ClassHolder>>(classes, HttpStatus.OK);
+		
 	}
 	
 	private void loadSpells() {
