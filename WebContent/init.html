@@ -96,13 +96,11 @@ Name: <input type="text" id="name">  Init: <input type="text" id="init"> Bonus: 
 const store = new Vuex.Store({
   state: {
     count: 0,
-    players: [      
-    ],
+    players: [],
     currentPlayer: 0,
     playerUp: -1,
     round: 1,
-    conditions: [
-    ]
+    conditions: []
   },
   mutations: {
     increment (state) {

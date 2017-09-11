@@ -17,7 +17,7 @@ public enum CharacterClass {
 	WITCH("Witch", "witch"),
 	INQUISITOR("Inquisitor", "inquisitor"),
 	ORACLE("Oracle", "oracle"),
-	ANTIPALADINT("Anti-Paladin", "antipalading"),
+	ANTIPALADINT("Anti-Paladin", "antipaladin"),
 	MAGUS("Magus", "magus"),
 	ADEPT("Adept", "adept"),
 	BLOODRAGER("Bloodrager", "bloodrager"),
@@ -27,8 +27,8 @@ public enum CharacterClass {
 	MESMERIST("Mesmerist", "mesmerist"),
 	OCCULTIST("Occultist", "occultist"),
 	SPIRITUALIST("Spiritualist", "spiritualist"),
-	SKALD("Skald", "skald"),
-	INVESTIGATOR("Investigator", "investigator"),
+	SKALD("Skald", "bard"),
+	INVESTIGATOR("Investigator", "alchemist"),
 	HUNTER("Hunter", "hunter");
 
 

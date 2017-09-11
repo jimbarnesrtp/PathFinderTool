@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="./js/vue.js"></script>
+  <script src="./js/vuex.js"></script>
+  <script src="./js/jquery-3.2.1.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="./css/app.css">
+   <link rel="stylesheet" type="text/css" href="./css/foundation.css">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<title>Spell List</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<div class="container" id="app">
+<div class="row">
+	<div class="medium-3 column">
+	     To display your spells please choose a class
+	     <select id="class" v-model="selected" @change="changeSpells()">
+	  		<option value="">Please Choose a class</option>
+	  		<option  v-for="cclass in classes" v-bind:value="cclass.shortName"> {{ cclass.displayName }} </option>
+	  	</select>
+      </div>
+  </div>
+  <div class="row" v-for="spell in currentSpells">
+	<div class="medium-3">
+		{{ spell.name }}
+	</div>
+  </div>
+
+	
+</div>
+<script src="./js/what-input.js"></script>
+<script src="./js/foundation.js"></script>
+<script>
+
+var isSpellForClass = function (id, spell) {
+	var spellLevel = spell.spellLevel[id];
+	if(spellLevel > -1) {
+		return true;
+	} else {
+		return false;
+	}
+	
+
+}
+
+var sortSpells = function(a, b) {
+  aSpellLevel = a.spellLevel[vm.selected];
+  bSpellLevel = b.spellLevel[vm.selected];
+  if(bSpellLevel==aSpellLevel) {
+  	if(a.firstname < b.firstname) return -1;
+    if(a.firstname > b.firstname) return 1;
+    return 0;
+  } else {
+      return aSpellLevel-bSpellLevel;
+  }
+
+}
+const vm = new Vue({
+  el: '#app',
+  data: {
+    classes: [],
+    spells: [],
+    currentSpells: [],
+    selected : ''
+    
+  },
+  methods: {
+    changeSpells: function () { 
+    	vm.currentSpells = [];        
+	     var arrayLength = vm.spells.length;
+		 for (var i = 0; i < arrayLength; i++) {
+		    if(isSpellForClass(vm.selected, vm.spells[i])) {
+		    	vm.currentSpells.push(vm.spells[i]);
+		    }
+    		
+		 }
+		 vm.currentSpells.sort(function(a, b){return sortSpells(a,b)});
+    }
+  },
+  mounted() {
+    axios.get("/PathFinderTool/pftool/GetClasses")
+    .then(response => {this.classes = response.data})
+    axios.get("/PathFinderTool/pftool/GetSpells")
+    .then(response => {this.spells = response.data})
+  }
+});
+</script>
+</body>
+</html>
