@@ -186,7 +186,7 @@ public class ToolController {
 					 if(intHolder == null || intHolder.equals("NULL")) {
 						 sl.setRanger(-1);
 					 } else {
-						 sl.setBard(Integer.parseInt(intHolder));
+						 sl.setRanger(Integer.parseInt(intHolder));
 					 }
 					 intHolder = sc.next();
 					 if(intHolder == null || intHolder.equals("NULL")) {
