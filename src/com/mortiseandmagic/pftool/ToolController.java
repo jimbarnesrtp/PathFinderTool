@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.mortiseandmagic.pftool.model.CharacterClass;
 import com.mortiseandmagic.pftool.model.ClassHolder;
+import com.mortiseandmagic.pftool.model.Feat;
+import com.mortiseandmagic.pftool.model.MagicItem;
 import com.mortiseandmagic.pftool.model.Spell;
 import com.mortiseandmagic.pftool.model.SpellLevel;
 
@@ -25,11 +27,13 @@ import com.mortiseandmagic.pftool.model.SpellLevel;
 public class ToolController {
 	
 	private List<Spell> spells = null;
+	private List<Feat> feats = null;
+	private List<MagicItem> magicItems = null;
 	
 	@RequestMapping(value = "/GetSpells", 
             produces = { MediaType.APPLICATION_JSON_VALUE }, 
             method = RequestMethod.GET)
-	public ResponseEntity<List<Spell>> getOfferings() {
+	public ResponseEntity<List<Spell>> getSpells() {
 		if(spells == null) {
 			loadSpells();
 		}
@@ -49,6 +53,26 @@ public class ToolController {
 		}
 		return new ResponseEntity<List<ClassHolder>>(classes, HttpStatus.OK);
 		
+	}
+	
+	@RequestMapping(value = "/GetFeats", 
+            produces = { MediaType.APPLICATION_JSON_VALUE }, 
+            method = RequestMethod.GET)
+	public ResponseEntity<List<Feat>> getFeats() {
+		if(spells == null) {
+			loadFeats();
+		}
+		return new ResponseEntity<List<Feat>>(feats, HttpStatus.OK);
+	}
+	
+	@RequestMapping(value = "/GetMagicItems", 
+            produces = { MediaType.APPLICATION_JSON_VALUE }, 
+            method = RequestMethod.GET)
+	public ResponseEntity<List<MagicItem>> getMagicItems() {
+		if(magicItems == null) {
+			loadMagicItems();
+		}
+		return new ResponseEntity<List<MagicItem>>(magicItems, HttpStatus.OK);
 	}
 	
 	private void loadSpells() {
@@ -496,5 +520,275 @@ public class ToolController {
 		}
 	}
 	
+	
+	private void loadFeats() {
+		feats = new ArrayList<Feat>();
+		InputStream inputStream =  getClass().getClassLoader().getResourceAsStream("Feats.csv");
+		BufferedReader br = new BufferedReader(new InputStreamReader(inputStream ));
+		try {
+			String line = br.readLine();
+			//System.out.println("Line:"+line);
+			Pattern patt = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+			while(line != null) {
+				Scanner sc = new Scanner(line).useDelimiter(patt);
+				//StringBuffer sb = new StringBuffer();
+				Feat feat = new Feat();
+				 while (sc.hasNext()) {
+					 
+					 /*id	name	type	description	prerequisites	prerequisite_feats	benefit	normal	
+						 * special	source	fulltext	teamwork	critical	grit	style	performance	racial	
+						 * companion_familiar	race_name	note	goal	completion_benefit	multiples	suggested_traits	
+						 * prerequisite_skills	panache	betrayal	targeting	esoteric	stare	weapon_mastery	
+						 * item_mastery	armor_mastery	shield_mastery	blood_hex	trick
+						 */
+					 sc.next();
+					 String name = sc.next().replace("\"", "");
+					 //System.out.println(name);
+					 //System.out.println("second Desc:"+desc);
+					 feat.setName(name);
+					 feat.setType(sc.next().replaceAll("\"", ""));
+					 feat.setDescription(sc.next().replaceAll("\"", ""));
+					 feat.setPrereq(sc.next().replace("\"", ""));
+					 feat.setPrerequisiteFeats(sc.next().replaceAll("\"", ""));
+					 feat.setBenefit(sc.next().replaceAll("\"", ""));
+					 feat.setNormal(sc.next().replaceAll("\"", ""));
+					 feat.setSpecial(sc.next().replaceAll("\"", ""));
+					 feat.setSource(sc.next());
+					 sc.next();
+					 String booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setTeamwork(false);
+					 } else {
+						 feat.setTeamwork(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setCritical(false);
+					 } else {
+						 feat.setCritical(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setGrit(false);
+					 } else {
+						 feat.setGrit(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setStyle(false);
+					 } else {
+						 feat.setStyle(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setPerformance(false);
+					 } else {
+						 feat.setPerformance(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setRacial(false);
+					 } else {
+						 feat.setRacial(true);
+					 }
+					 sc.next();
+					 feat.setRaceName(sc.next());
+					 sc.next();
+					 feat.setGoal(sc.next());
+					 feat.setCompletionBonus(sc.next());
+					 
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setMultiples(false);
+					 } else {
+						 feat.setMultiples(true);
+					 }
+					 sc.next();
+					 feat.setPrerequisiteSkills(sc.next());
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setPanache(false);
+					 } else {
+						 feat.setPanache(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setBetrayal(false);
+					 } else {
+						 feat.setBetrayal(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 feat.setTargeting(false);
+					 } else {
+						 feat.setTargeting(true);
+					 }
+					 
+					 break;
+					 
+				 }
+				 feats.add(feat);
+				 //System.out.println(sb.toString());
+				 line = br.readLine();
+				 sc.close();
+				 
+				}
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	private void loadMagicItems() {
+		magicItems = new ArrayList<MagicItem>();
+		InputStream inputStream =  getClass().getClassLoader().getResourceAsStream("magic_items_full.csv");
+		BufferedReader br = new BufferedReader(new InputStreamReader(inputStream ));
+		try {
+			String line = br.readLine();
+			//System.out.println("Line:"+line);
+			line = br.readLine();
+			Pattern patt = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+			while(line != null) {
+				Scanner sc = new Scanner(line).useDelimiter(patt);
+				//StringBuffer sb = new StringBuffer();
+				MagicItem item = new MagicItem();
+				 while (sc.hasNext()) {
+					 
+					 /* Name	Aura	CL	Slot	Price	Weight	Description	Requirements	Cost	Group	Source	AL	
+						 * Int	Wis	Cha	Ego	Communication	Senses	Powers	MagicItems	FullText	
+						 * Destruction	MinorArtifactFlag	MajorArtifactFlag	Abjuration	Conjuration	Divination	Enchantment	
+						 * Evocation	Necromancy	Transmutation	AuraStrength	WeightValue	PriceValue	CostValue	Languages	
+						 * BaseItem	LinkText	id	Mythic	LegendaryWeapon	Illusion	Universal	Scaling*/
+					 item.setName(sc.next().replace("\"", ""));
+					 System.out.println("Name: "+ item.getName());
+					 item.setAura(sc.next().replace("\"", ""));
+					 item.setCl(sc.next().replace("\"", ""));
+					 item.setSlot(sc.next().replace("\"", ""));
+					 item.setPrice(sc.next().replace("\"", ""));
+					 item.setWeight(sc.next().replace("\"", ""));
+					 item.setDescription(sc.next().replace("\"", ""));
+					 item.setRequirements(sc.next().replace("\"", ""));
+					 item.setCost(sc.next().replace("\"", ""));
+					 item.setGroup(sc.next().replace("\"", ""));
+					 item.setSource(sc.next().replace("\"", ""));
+					 item.setAlignment(sc.next().replace("\"", ""));
+					 item.setIntel(sc.next().replace("\"", ""));
+					 item.setWis(sc.next().replace("\"", ""));
+					 item.setCha(sc.next().replace("\"", ""));
+					 item.setEgo(sc.next().replace("\"", ""));
+					 item.setCommunication(sc.next().replace("\"", ""));
+					 item.setSenses(sc.next().replace("\"", ""));
+					 item.setPowers(sc.next().replace("\"", ""));
+					 item.setMagicItems(sc.next().replace("\"", ""));					 
+					 sc.next();
+					 item.setDestruction(sc.next().replace("\"", ""));
+					 
+					 String booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setMinorArtifact(false);
+					 } else {
+						 item.setMinorArtifact(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setMajorArtifact(false);
+					 } else {
+						 item.setMajorArtifact(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setAbjuration(false);
+					 } else {
+						 item.setAbjuration(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setConjuration(false);
+					 } else {
+						 item.setConjuration(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setDivination(false);
+					 } else {
+						 item.setDivination(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setEnchantment(false);
+					 } else {
+						 item.setEnchantment(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setEvocation(false);
+					 } else {
+						 item.setEvocation(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setNecromancy(false);
+					 } else {
+						 item.setNecromancy(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setTransmutation(false);
+					 } else {
+						 item.setTransmutation(true);
+					 }
+					 item.setAuraStrength(sc.next().replace("\"", ""));
+					 String stringHolder = sc.next();
+					 if(stringHolder.equals("NULL")) {
+						 item.setWeightValue(0.0d);
+					 } else {
+						 item.setWeightValue(Double.parseDouble(stringHolder));
+					 }
+					 
+					 item.setPriceValue(Double.parseDouble(sc.next()));
+					 item.setCostValue(Double.parseDouble(sc.next()));
+					 item.setLanguages(sc.next().replace("\"", ""));
+					 item.setBaseItem(sc.next().replace("\"", ""));
+					 sc.next();
+					 sc.next();
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setMythic(false);
+					 } else {
+						 item.setMythic(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setLegendary(false);
+					 } else {
+						 item.setLegendary(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setIllusion(false);
+					 } else {
+						 item.setIllusion(true);
+					 }
+					 booleanHolder = sc.next();
+					 if(booleanHolder.equals("0")) {
+						 item.setUniversal(false);
+					 } else {
+						 item.setUniversal(true);
+					 }
+					 
+					 break;
+					 
+				 }
+				 magicItems.add(item);
+				 //System.out.println(sb.toString());
+				 line = br.readLine();
+				 sc.close();
+				 
+				}
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+	}
 
 }
