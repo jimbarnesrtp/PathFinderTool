@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
@@ -16,10 +19,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.mortiseandmagic.pftool.model.AbilityHolder;
 import com.mortiseandmagic.pftool.model.CharacterClass;
 import com.mortiseandmagic.pftool.model.ClassHolder;
 import com.mortiseandmagic.pftool.model.Feat;
 import com.mortiseandmagic.pftool.model.MagicItem;
+import com.mortiseandmagic.pftool.model.Monster;
+import com.mortiseandmagic.pftool.model.MonsterRule;
 import com.mortiseandmagic.pftool.model.Spell;
 import com.mortiseandmagic.pftool.model.SpellLevel;
 
@@ -29,6 +35,33 @@ public class ToolController {
 	private List<Spell> spells = null;
 	private List<Feat> feats = null;
 	private List<MagicItem> magicItems = null;
+	private List<Monster> monsters = null;
+	private List<MonsterRule> monsterRules = null;
+	
+	public class SpliceHolder {
+		private String type;
+		private int start;
+		private int stop;
+		public String getType() {
+			return type;
+		}
+		public void setType(String type) {
+			this.type = type;
+		}
+		public int getStart() {
+			return start;
+		}
+		public void setStart(int start) {
+			this.start = start;
+		}
+		public int getStop() {
+			return stop;
+		}
+		public void setStop(int stop) {
+			this.stop = stop;
+		}
+		
+	}
 	
 	@RequestMapping(value = "/GetSpells", 
             produces = { MediaType.APPLICATION_JSON_VALUE }, 
@@ -73,6 +106,26 @@ public class ToolController {
 			loadMagicItems();
 		}
 		return new ResponseEntity<List<MagicItem>>(magicItems, HttpStatus.OK);
+	}
+	
+	@RequestMapping(value = "/GetMonsters", 
+            produces = { MediaType.APPLICATION_JSON_VALUE }, 
+            method = RequestMethod.GET)
+	public ResponseEntity<List<Monster>> getMonsters() {
+		if(monsters == null) {
+			loadMonsters();
+		}
+		return new ResponseEntity<List<Monster>>(monsters, HttpStatus.OK);
+	}
+	
+	@RequestMapping(value = "/GetMonsterRules", 
+            produces = { MediaType.APPLICATION_JSON_VALUE }, 
+            method = RequestMethod.GET)
+	public ResponseEntity<List<MonsterRule>> getMonsterRules() {
+		if(monsterRules == null) {
+			loadMonsterRules();
+		}
+		return new ResponseEntity<List<MonsterRule>>(monsterRules, HttpStatus.OK);
 	}
 	
 	private void loadSpells() {
@@ -789,6 +842,545 @@ public class ToolController {
 			
 			e.printStackTrace();
 		}
+	}
+	
+	
+	
+	private void loadMonsters() {
+		monsters = new ArrayList<Monster>();
+		InputStream inputStream =  getClass().getClassLoader().getResourceAsStream("monster_bestiary_full.csv");
+		BufferedReader br = new BufferedReader(new InputStreamReader(inputStream ));
+		try {
+			String line = br.readLine();
+			//System.out.println("Line:"+line);
+			line = br.readLine();
+			Pattern patt = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+			while(line != null) {
+				Scanner sc = new Scanner(line).useDelimiter(patt);
+				//StringBuffer sb = new StringBuffer();
+				Monster mon = new Monster();
+				 while (sc.hasNext()) {
+					 
+					 mon.setName(sc.next().replace("\"", ""));
+					 System.out.println("Name: "+ mon.getName());
+					 mon.setCr(sc.next());
+					 mon.setXp(sc.next());
+					 mon.setRace(sc.next());
+					 mon.setClassName(sc.next());
+					 //mon.setSource(sc.next());
+					 sc.next();
+					 mon.setAlignment(sc.next());
+					 mon.setSize(sc.next());
+					 mon.setType(sc.next());
+					 mon.setSubType(sc.next().replaceAll("\"", ""));
+					 mon.setInit(sc.next());
+					 
+					 mon.setSenses(sc.next().replaceAll("\"", ""));
+					 mon.setAura(sc.next());
+					 mon.setAc(new ArrayList<String>(Arrays.asList(sc.next().replaceAll("\"", "").split(","))));
+					 mon.setAcMods(sc.next().replaceAll("\"", ""));
+					 String stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 mon.setHp(Integer.parseInt(stringHolder));
+					 } else {
+						 mon.setHp(0);
+					 }
+					 mon.setHd(sc.next());
+					 mon.setHpMods(sc.next().replaceAll("\"", ""));
+					 sc.next();
+					 mon.setFort(sc.next());
+					 mon.setRef(sc.next());
+					 mon.setWill(sc.next());
+					 mon.setSaveMods(sc.next().replaceAll("\"", ""));
+					 mon.setDefenseAbilities(sc.next());
+					 mon.setDr(sc.next());
+					 mon.setImmune(sc.next().replaceAll("\"", ""));
+					 mon.setResist(sc.next().replaceAll("\"", ""));
+					 mon.setSr(sc.next());
+
+					 mon.setWeaknesses(sc.next());
+					 mon.setSpeed(sc.next().replaceAll("\"", ""));
+					 mon.setSpeedMod(sc.next().replaceAll("\"", ""));
+					 mon.setMelee(sc.next().replaceAll("\"", ""));
+					 mon.setRanged(sc.next().replaceAll("\"", ""));
+					 mon.setSpace(sc.next());
+					 mon.setReach(sc.next());
+					 mon.setSpecialAttacks(sc.next().replaceAll("\"", ""));
+					 // changing to put this in list form
+					 
+					 mon.setSpellLikeAbilities(regExSplitAbility(sc.next().replaceAll("\"", "")));
+					 mon.setSpellsKnown(regExSplitSpellsKnown(sc.next().replaceAll("\"", "")));
+					// mon.setSpellsPrepared(sc.next().replaceAll("\"", ""));
+					 mon.setSpellsPrepared(regExSplitSpell(sc.next().replaceAll("\"", "")));
+					 mon.setSpellDomains(sc.next().replaceAll("\"", ""));
+					 mon.setAbilitiyScores(new ArrayList<String>(Arrays.asList(sc.next().replaceAll("\"", "").split(","))));
+					 mon.setAbilityScoreMods(sc.next().replaceAll("\"", ""));
+					 mon.setBaseAtk(sc.next().replaceAll("\"", ""));
+					 mon.setCmb(sc.next().replaceAll("\"", ""));
+					 mon.setCmd(sc.next().replaceAll("\"", ""));
+					 mon.setFeats(new ArrayList<String>(Arrays.asList(sc.next().replaceAll("\"", "").split(","))));
+					 mon.setSkills(new ArrayList<String>(Arrays.asList(sc.next().replaceAll("\"", "").split(","))));
+					 mon.setRacialMods(new ArrayList<String>(Arrays.asList(sc.next().replaceAll("\"", "").split(","))));
+					 mon.setLanguages(new ArrayList<String>(Arrays.asList(sc.next().replaceAll("\"", "").split(","))));
+					 mon.setSq(sc.next().replaceAll("\"", ""));
+					 mon.setEnvironment(sc.next().replaceAll("\"", ""));
+					 mon.setOrg(sc.next().replaceAll("\"", ""));
+					 mon.setTreasure(sc.next().replaceAll("\"", ""));
+					 mon.setDescription(sc.next().replaceAll("\"", ""));
+					 mon.setGroup(sc.next().replaceAll("\"", ""));
+					 mon.setSource(sc.next().replaceAll("\"", ""));
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setTemplate(false);
+						 } else {
+							 mon.setTemplate(true);
+						 }						 
+					 } else {
+						 mon.setTemplate(false);
+					 }
+					 mon.setSpecialAbilities(sc.next().replaceAll("\"", ""));
+					 mon.setDescription(sc.next().replaceAll("\"", ""));
+					 sc.next();
+					 mon.setGender(sc.next().replaceAll("\"", ""));
+					 mon.setBloodline(sc.next().replaceAll("\"", ""));
+					 sc.next();
+					 mon.setBeforeCombat(sc.next().replaceAll("\"", ""));
+					 mon.setDuringCombat(sc.next().replaceAll("\"", ""));
+					 mon.setMorale(sc.next().replaceAll("\"", ""));
+					 mon.setGear(sc.next().replaceAll("\"", ""));
+					 mon.setOtherGear(sc.next().replaceAll("\"", ""));
+					 mon.setVulnerability(sc.next().replaceAll("\"", ""));
+					 mon.setNote(sc.next().replaceAll("\"", ""));
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setCharacter(false);
+						 } else {
+							 mon.setCharacter(true);
+						 }						 
+					 } else {
+						 mon.setCharacter(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setCompanion(false);
+						 } else {
+							 mon.setCompanion(true);
+						 }						 
+					 } else {
+						 mon.setCompanion(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setFly(false);
+						 } else {
+							 mon.setFly(true);
+						 }						 
+					 } else {
+						 mon.setFly(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setClimb(false);
+						 } else {
+							 mon.setClimb(true);
+						 }						 
+					 } else {
+						 mon.setClimb(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setBurrow(false);
+						 } else {
+							 mon.setBurrow(true);
+						 }						 
+					 } else {
+						 mon.setBurrow(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setSwim(false);
+						 } else {
+							 mon.setSwim(true);
+						 }						 
+					 } else {
+						 mon.setSwim(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setLand(false);
+						 } else {
+							 mon.setLand(true);
+						 }						 
+					 } else {
+						 mon.setLand(false);
+					 }
+					 mon.setTemplatesApplied(sc.next().replaceAll("\"", ""));
+					
+					 mon.setOffenseNote(sc.next().replaceAll("\"", ""));
+					 mon.setBaseStatistics(sc.next().replaceAll("\"", ""));
+					 mon.setExtractsPrepared(sc.next().replaceAll("\"", ""));
+					 mon.setAgeCategory(sc.next().replaceAll("\"", ""));
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setUseRacialHD(false);
+						 } else {
+							 mon.setUseRacialHD(true);
+						 }						 
+					 } else {
+						 mon.setUseRacialHD(false);
+					 }
+					 mon.setVariantParent(sc.next().replaceAll("\"", ""));
+					 mon.setMystery(sc.next().replaceAll("\"", ""));
+					 mon.setClassArchetypes(sc.next().replaceAll("\"", ""));
+					 mon.setPatron(sc.next().replaceAll("\"", ""));
+					 mon.setCompanionFamiliarLink(sc.next().replaceAll("\"", ""));
+					 sc.next();
+					 mon.setTraits(sc.next().replaceAll("\"", ""));	
+					 mon.setAlternateNameForm(sc.next().replaceAll("\"", ""));
+					 mon.setStatisticsNote(sc.next().replaceAll("\"", ""));
+					 sc.next();
+					 sc.next();
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setUniqueMonster(false);
+						 } else {
+							 mon.setUniqueMonster(true);
+						 }						 
+					 } else {
+						 mon.setUniqueMonster(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setMr(false);
+						 } else {
+							 mon.setMr(true);
+						 }						 
+					 } else {
+						 mon.setMr(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setMythic(false);
+						 } else {
+							 mon.setMythic(true);
+						 }						 
+					 } else {
+						 mon.setMythic(false);
+					 }
+					 stringHolder = sc.next();
+					 if(stringHolder != null) {
+						 if(stringHolder.equals("0")) {
+							 mon.setMt(false);
+						 } else {
+							 mon.setMt(true);
+						 }						 
+					 } else {
+						 mon.setMt(false);
+					 }
+					 
+					 break;
+					 
+					
+					 
+				 }
+				 monsters.add(mon);
+				 //System.out.println(sb.toString());
+				 line = br.readLine();
+				 sc.close();
+				 
+				}
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	private void loadMonsterRules() {
+		monsterRules = new ArrayList<MonsterRule>();
+		InputStream inputStream =  getClass().getClassLoader().getResourceAsStream("umr.csv");
+		BufferedReader br = new BufferedReader(new InputStreamReader(inputStream ));
+		try {
+			String line = br.readLine();
+			//System.out.println("Line:"+line);
+			line = br.readLine();
+			Pattern patt = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+			while(line != null) {
+				Scanner sc = new Scanner(line).useDelimiter(patt);
+				//StringBuffer sb = new StringBuffer();
+				MonsterRule monsterRule = new MonsterRule();
+				 while (sc.hasNext()) {
+					 
+					 monsterRule.setDisplayName(sc.next().replace("\"", ""));
+					 System.out.println("Name: "+ monsterRule.getDisplayName());
+					 if(monsterRule.getDisplayName().indexOf("(") > -1 ) {
+						 monsterRule.setName(monsterRule.getDisplayName().substring(0,monsterRule.getDisplayName().indexOf("(")).trim());
+					 } else {
+						 monsterRule.setName(monsterRule.getDisplayName());
+					 }
+					 monsterRule.setText(sc.next().replaceAll("\"", ""));
+					 monsterRule.setFormat(sc.next().replaceAll("\"", ""));
+					 monsterRule.setFaq(sc.next().replaceAll("\"", ""));
+					 if(sc.hasNext()) {
+						 monsterRule.setHtml(sc.next());
+					 }
+					 
+					 
+					 break;
+					 
+					
+					 
+				 }
+				 monsterRules.add(monsterRule);
+				 //System.out.println(sb.toString());
+				 line = br.readLine();
+				 sc.close();
+				 
+				}
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	private List<AbilityHolder> regExSplitAbility(String input) {
+		//System.out.println(input);
+		List<AbilityHolder> abilities = new LinkedList<AbilityHolder>();
+		List<SpliceHolder> holder = new LinkedList<SpliceHolder>();
+		
+		String casterLevel = "";
+		Pattern pattern = Pattern.compile("[C][L]\\s\\d+..");
+		Matcher matcher = pattern.matcher(input);
+		SpliceHolder sH = null;
+		while (matcher.find()) {
+            casterLevel = matcher.group();
+            break;
+        }
+		System.out.println(casterLevel);
+		pattern = Pattern.compile("(concentration)\\s.\\d+");
+		matcher = pattern.matcher(input);
+		String concentration = "";
+		while (matcher.find()) {
+ 
+            concentration = matcher.group();
+           
+        }
+		
+		pattern = Pattern.compile("(Constant-)");
+		matcher = pattern.matcher(input);
+		while (matcher.find()) {
+
+            sH = new SpliceHolder();
+            sH.setType(matcher.group());
+            sH.setStart(matcher.start());
+            sH.setStop(matcher.end());
+            holder.add(sH);
+        }
+		pattern = Pattern.compile("(At\\sWill-)|(At\\swill-)");
+		matcher = pattern.matcher(input);
+		while (matcher.find()) {
+			
+            sH = new SpliceHolder();
+            sH.setType(matcher.group());
+            sH.setStart(matcher.start());
+            sH.setStop(matcher.end());
+            holder.add(sH);
+        }
+		pattern = Pattern.compile("\\d+/(day-)");
+		matcher = pattern.matcher(input);
+		while (matcher.find()) {
+			
+            sH = new SpliceHolder();
+            sH.setType(matcher.group());
+            sH.setStart(matcher.start());
+            sH.setStop(matcher.end());
+            holder.add(sH);
+        }
+		if(holder != null && holder.size() > 0) {
+			int maxEntry = holder.size()-1;
+			for(int i = 0; i< holder.size(); i++) {
+				SpliceHolder sh = holder.get(i);
+				AbilityHolder ah = new AbilityHolder();
+				ah.setName(sh.getType());
+				ah.setCasterLevel(casterLevel);
+				ah.setConcentration(concentration);
+				String[] aby;
+				if(i == holder.size()-1) {
+					//System.out.println("end:"+input.substring(sh.getStop()));
+					aby = input.substring(sh.getStop()).split(",");
+				} else {
+					//System.out.println("middle:"+input.substring(sh.getStop(), holder.get(i+1).getStart()));
+					aby = input.substring(sh.getStop(), holder.get(i+1).getStart()).split(",");
+				}
+				for(String s: aby) {
+					ah.addAbility(s);
+				}
+				abilities.add(ah);
+			}
+		}
+		
+		//Gson json = new Gson();
+		
+		//System.out.println(json.toJson(abilities));
+		return abilities;
+		
+	}
+	
+	private List<AbilityHolder> regExSplitSpell(String inputString) {
+		System.out.println(inputString);
+		List<AbilityHolder> abilities = new LinkedList<AbilityHolder>();
+		
+		String[] lists = inputString.split("Spells Prepared");
+		
+		for(String s: lists) {
+			List<SpliceHolder> holder = new LinkedList<SpliceHolder>();
+			String casterLevel = "";
+			Pattern pattern = Pattern.compile("[C][L]\\s\\d+..");
+			Matcher matcher = pattern.matcher(s);
+			while (matcher.find()) {
+				casterLevel = matcher.group();
+				break;
+			}
+			System.out.println(casterLevel);
+			SpliceHolder sH = null;
+			pattern = Pattern.compile("\\d[tnsr].-");
+			matcher = pattern.matcher(s);
+			while (matcher.find()) {
+
+				System.out.print("Start index: " + matcher.start());
+				System.out.print(" End index: " + matcher.end() + " ");
+				System.out.println(matcher.group());
+				sH = new SpliceHolder();
+				sH.setType(matcher.group());
+				sH.setStart(matcher.start());
+				sH.setStop(matcher.end());
+				holder.add(sH);
+			}
+			pattern = Pattern.compile("(0 \\(at will\\)-)");
+			matcher = pattern.matcher(s);
+			while (matcher.find()) {
+
+				System.out.print("Start index: " + matcher.start());
+				System.out.print(" End index: " + matcher.end() + " ");
+				System.out.println(matcher.group());
+				sH = new SpliceHolder();
+				sH.setType("At Will-");
+				sH.setStart(matcher.start());
+				sH.setStop(matcher.end());
+				holder.add(sH);
+			}
+			if (holder != null && holder.size() > 0) {
+				for (int i = 0; i < holder.size(); i++) {
+					SpliceHolder sh = holder.get(i);
+					AbilityHolder ah = new AbilityHolder();
+					ah.setName(sh.getType());
+					ah.setCasterLevel(casterLevel);
+					String[] aby;
+					if (i == holder.size() - 1) {
+						System.out.println("end:"
+								+ s.substring(sh.getStop()));
+						aby = s.substring(sh.getStop()).split(",");
+					} else {
+						System.out.println("middle:"
+								+ s.substring(sh.getStop(),
+										holder.get(i + 1).getStart()));
+						aby = s.substring(sh.getStop(),
+								holder.get(i + 1).getStart()).split(",");
+					}
+					for (String st : aby) {
+						ah.addAbility(st);
+					}
+					abilities.add(ah);
+				}
+			}
+		}
+
+		return abilities;
+		
+	}
+	
+	private List<AbilityHolder> regExSplitSpellsKnown(String inputString) {
+		System.out.println(inputString);
+		List<AbilityHolder> abilities = new LinkedList<AbilityHolder>();
+		
+		String[] lists = inputString.split("Spells Known");
+		
+		for(String s: lists) {
+			List<SpliceHolder> holder = new LinkedList<SpliceHolder>();
+			String casterLevel = "";
+			Pattern pattern = Pattern.compile("[C][L]\\s\\d+..");
+			Matcher matcher = pattern.matcher(s);
+			while (matcher.find()) {
+				casterLevel = matcher.group();
+				break;
+			}
+			System.out.println(casterLevel);
+			SpliceHolder sH = null;
+			pattern = Pattern.compile("\\d[tnsr].\\s\\(\\d/day\\)-");
+			matcher = pattern.matcher(s);
+			while (matcher.find()) {
+
+				System.out.print("Start index: " + matcher.start());
+				System.out.print(" End index: " + matcher.end() + " ");
+				System.out.println(matcher.group());
+				sH = new SpliceHolder();
+				sH.setType(matcher.group());
+				sH.setStart(matcher.start());
+				sH.setStop(matcher.end());
+				holder.add(sH);
+			}
+			pattern = Pattern.compile("(0 \\(at will\\)-)");
+			matcher = pattern.matcher(s);
+			while (matcher.find()) {
+
+				System.out.print("Start index: " + matcher.start());
+				System.out.print(" End index: " + matcher.end() + " ");
+				System.out.println(matcher.group());
+				sH = new SpliceHolder();
+				sH.setType("At Will-");
+				sH.setStart(matcher.start());
+				sH.setStop(matcher.end());
+				holder.add(sH);
+			}
+			if (holder != null && holder.size() > 0) {
+				for (int i = 0; i < holder.size(); i++) {
+					SpliceHolder sh = holder.get(i);
+					AbilityHolder ah = new AbilityHolder();
+					ah.setName(sh.getType());
+					ah.setCasterLevel(casterLevel);
+					String[] aby;
+					if (i == holder.size() - 1) {
+						System.out.println("end:"
+								+ s.substring(sh.getStop()));
+						aby = s.substring(sh.getStop()).split(",");
+					} else {
+						System.out.println("middle:"
+								+ s.substring(sh.getStop(),
+										holder.get(i + 1).getStart()));
+						aby = s.substring(sh.getStop(),
+								holder.get(i + 1).getStart()).split(",");
+					}
+					for (String st : aby) {
+						ah.addAbility(st);
+					}
+					abilities.add(ah);
+				}
+			}
+		}
+
+		return abilities;
+		
 	}
 
 }
